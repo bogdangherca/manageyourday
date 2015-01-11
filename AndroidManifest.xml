@@ -23,9 +23,18 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SearchActivity"
-            android:label="@string/title_activity_search" >
+            android:name=".NewTaskActivity"
+            android:label="@string/title_activity_new_task" >
         </activity>
+        <activity
+            android:name=".SearchActivity"
+            android:label="@string/title_activity_search">
+        </activity>
+            <receiver
+            android:name=".AlarmBroadCastReceiver"
+            android:enabled="true"
+            android:exported="true" >
+        </receiver>
     </application>
 
 </manifest>

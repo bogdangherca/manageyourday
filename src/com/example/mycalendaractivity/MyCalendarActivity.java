@@ -9,6 +9,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.StringTokenizer;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -16,24 +17,40 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.CheckBox;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 @TargetApi(3)
 public class MyCalendarActivity extends Activity implements OnClickListener {
 	private static final String tag = "MyCalendarActivity";
-
+	static final String YEAR = "com.MyCalendar.YEAR";
+	static final String MONTH = "com.MyCalendar.MONTH";
+	static final String DAY = "com.MyCalendar.DAY";
+	static final String TITLE = "com.MyCalendar.DAY";
+	static final String DESCRIPTION = "com.MyCalendar.DAY";
+	static final String HOUR = "com.MyCalendar.HOUR";
+	static final String MIN = "com.MyCalendar.MIN";
+	static final String IMP = "com.MyCalendar.IMP";
 	private TextView currentMonth;
 	private Button selectedDayMonthYearButton;
 	private ImageView prevMonth;
@@ -82,8 +99,8 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 				R.id.calendar_day_gridcell, month, year);
 		adapter.notifyDataSetChanged();
 		calendarView.setAdapter(adapter);
-		
-		dm = new DatabaseManager(getApplicationContext());
+		dm = DatabaseCreator.getHelper(getApplicationContext());;
+		/*
 		SQLiteDatabase db = dm.getWritableDatabase();
 		db.delete("Tasks", null, null);
 		
@@ -115,6 +132,7 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 		db.insert("Tasks", null, values11);
 		db.insert("Tasks", null, values12);
 		db.insert("Tasks", null, values13);
+		*/
 	}
 
 	/**
@@ -171,6 +189,7 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 	}
 
 	// Inner Class
+	@SuppressLint("NewApi")
 	public class GridCellAdapter extends BaseAdapter implements OnClickListener {
 		private static final String tag = "GridCellAdapter";
 		private final Context _context;
@@ -417,10 +436,171 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 			return row;
 		}
 
+		private TableLayout tl;
+		private String date_month_year;
+		
+		private OnClickListener rowOnClickListener = new OnClickListener() {
+	        public void onClick(View v) {
+	        	TableRow tr = (TableRow)v;
+	        	
+	        	TextView th = (TextView)tr.getChildAt(2);
+	        	String hour = th.getText().toString();
+	        	
+	        	CheckBox cb = (CheckBox) tr.getChildAt(4);
+	        	if (cb.isChecked()) {
+	        		tl.removeView(tr);
+	        		tl.refreshDrawableState();
+	        		
+	        		SQLiteDatabase db = dm.getReadableDatabase();
+	        		String selection = "date='" +  date_month_year + "' AND hour='" + hour + "'";
+	        		db.delete("Tasks", selection, null);
+	        	}
+	        	else {
+
+	        		TextView subj = (TextView)tr.getChildAt(1);
+		        	String subiect = subj.getText().toString();
+		        	
+		        	TextView imp = (TextView)tr.getChildAt(3);
+		        	String priority = imp.getText().toString();
+		        }
+	        	
+	        }
+	    };  
+		
 		@Override
 		public void onClick(View view) {
-			String date_month_year = (String) view.getTag();
+			date_month_year = (String) view.getTag();
 			selectedDayMonthYearButton.setText("Selected: " + date_month_year);
+			
+			SQLiteDatabase db = dm.getReadableDatabase();
+			
+			String[] projection = {"taskid", "subject", "hour", "importance"};
+			String selection = "date = '" + date_month_year + "'";
+			
+			String sortOrder = "hour" + " ASC";
+			
+			try {
+				tl = (TableLayout) findViewById(R.id.displayLinear);
+				tl.removeAllViews();
+				
+				Cursor c = db.query("Tasks", 
+						projection,
+						selection,
+						null,
+						null,
+						null,
+						sortOrder);
+				
+				if (c.getCount() == 0)
+				{
+					Toast.makeText(getApplicationContext(), "There are no tasks for today!", Toast.LENGTH_LONG).show();
+					return;
+				}
+				
+				TextView iID = new TextView(getApplicationContext());
+				iID.setText("Task ID");
+				iID.setTextColor(Color.rgb(204, 102, 0));
+				iID.setGravity(Gravity.CENTER);
+				iID.setPadding(10, 0, 10, 0);
+				
+				TextView sbID = new TextView(getApplicationContext());
+				sbID.setText("Task subject");
+				sbID.setTextColor(Color.rgb(204, 102, 0));
+				sbID.setGravity(Gravity.CENTER);
+				sbID.setPadding(10, 0, 10, 0);
+				
+				TextView hID = new TextView(getApplicationContext());
+				hID.setText("End time");
+				hID.setTextColor(Color.rgb(204, 102, 0));
+				hID.setGravity(Gravity.CENTER);
+				hID.setPadding(10, 0, 10, 0);
+				
+				TextView imID = new TextView(getApplicationContext());
+				imID.setText("Priority");
+				imID.setTextColor(Color.rgb(204, 102, 0));
+				imID.setGravity(Gravity.CENTER);
+				imID.setPadding(10, 0, 10, 0);
+				
+				TextView cbID = new TextView(getApplicationContext());
+				cbID.setText("Delete task");
+				cbID.setTextColor(Color.rgb(204, 102, 0));
+				cbID.setGravity(Gravity.CENTER);
+				cbID.setPadding(10, 0, 10, 0);
+				
+				TableRow rowH = new TableRow(getApplicationContext());
+				rowH.addView(iID);
+				rowH.addView(sbID);
+				rowH.addView(hID);
+				rowH.addView(imID);
+				rowH.addView(cbID);
+				
+				tl.addView(rowH);
+				
+				int lines = c.getCount();
+				c.moveToFirst();
+				for (int j = 0 ; j < lines ; j++) {
+					int tid = c.getInt(c.getColumnIndexOrThrow("taskid"));
+					String sb = c.getString(c.getColumnIndexOrThrow("subject"));
+					String h = c.getString(c.getColumnIndexOrThrow("hour"));
+					String im = c.getString(c.getColumnIndexOrThrow("importance"));
+					
+					int col = 0;
+					if (im.equals("High"))
+						col = Color.RED;
+					else if (im.equals("Medium"))
+						col = Color.BLACK;
+					else
+						col = Color.BLUE;
+						
+					
+					TextView idV = new TextView(getApplicationContext());
+					idV.setText(tid + "");
+					idV.setTextColor(col);
+					idV.setGravity(Gravity.CENTER);
+					idV.setPadding(10, 0, 10, 0);
+					
+					TextView sbV = new TextView(getApplicationContext());
+					sbV.setText(sb);
+					sbV.setTextColor(col);
+					sbV.setGravity(Gravity.CENTER);
+					sbV.setPadding(10, 0, 10, 0);
+					
+					TextView hV = new TextView(getApplicationContext());
+					hV.setText(h);
+					hV.setTextColor(col);
+					hV.setGravity(Gravity.CENTER);
+					hV.setPadding(10, 0, 10, 0);
+					
+					TextView imV = new TextView(getApplicationContext());
+					imV.setText(im);
+					imV.setTextColor(col);
+					imV.setGravity(Gravity.CENTER);
+					imV.setPadding(10, 0, 10, 0);
+					
+					CheckBox cb = new CheckBox(getApplicationContext());
+					cb.setChecked(false);
+					
+					TableRow row = new TableRow(getApplicationContext());
+
+					row.addView(idV);
+			        row.addView(sbV);
+			        row.addView(hV);
+			        row.addView(imV);
+			        row.addView(cb);
+			        
+			        row.setClickable(true);
+			        row.setOnClickListener(rowOnClickListener);
+			        
+			        tl.addView(row);
+					
+					if (j < lines - 1)
+						c.moveToNext();
+				}
+			} catch (Exception e) {
+				Toast.makeText(getApplicationContext(), "There are no tasks for today!", Toast.LENGTH_LONG).show();
+				return;
+			}
+			
 			Log.e("Selected date", date_month_year);
 			try {
 				Date parsedDate = dateFormatter.parse(date_month_year);
@@ -446,5 +626,29 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 		public int getCurrentWeekDay() {
 			return currentWeekDay;
 		}
+	}
+	public void openNewTaskActivity(View view) {
+		Intent intent = new Intent(this, NewTaskActivity.class);
+		intent.putExtra(YEAR, year);
+		intent.putExtra(MONTH, month);
+		StringTokenizer stk = new StringTokenizer(selectedDayMonthYearButton.getText().toString(), "Selected: -;\" ");
+		if (stk.hasMoreTokens()) {
+			String day = stk.nextToken();
+			intent.putExtra(DAY, Integer.parseInt(day));
+		}
+		startActivity(intent);
+	}
+	
+	public void openUpdateTaskActivity(int year, int month, int day, int hour, int min, String title, String description, String imp) {
+		Intent intent = new Intent(this, NewTaskActivity.class);
+		intent.putExtra(YEAR, year);
+		intent.putExtra(MONTH, month);
+		intent.putExtra(DAY, day);
+		intent.putExtra(HOUR, hour);
+		intent.putExtra(MIN, min);
+		intent.putExtra(TITLE, title);
+		intent.putExtra(DESCRIPTION, description);
+		intent.putExtra(IMP, imp);
+		startActivity(intent);
 	}
 }
