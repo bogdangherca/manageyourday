@@ -59,15 +59,33 @@
     </LinearLayout>
     
     <ScrollView
+        android:id="@+id/scrollView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp">
-    <Button
-         android:id="@+id/settings1"
-         android:layout_width="54sp"
-         android:layout_height="60sp"
-         android:background="@drawable/meenu"
-         android:onClick="triggerSearch" />
+    
+    <HorizontalScrollView
+            android:id="@+id/hscrll1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+            
+            <LinearLayout
+                android:id="@+id/RelativeLayout1"
+                android:layout_width="fill_parent"
+                android:layout_gravity="left"
+                android:layout_height="fill_parent"
+                android:orientation="vertical" >
+        
+		        <TableLayout
+		            android:layout_width="fill_parent"
+		            android:layout_height="fill_parent"
+		            android:id="@+id/displayLinear"
+		            android:layout_margin="5dp"
+		            android:layout_alignParentLeft="true"
+		            android:stretchColumns="30">
+		        </TableLayout>
+			</LinearLayout>
+        </HorizontalScrollView>
     </ScrollView>
     
 </LinearLayout>

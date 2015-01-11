@@ -13,8 +13,10 @@ import java.util.Locale;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -45,6 +47,7 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 	@SuppressLint({ "NewApi", "NewApi", "NewApi", "NewApi" })
 	private final DateFormat dateFormatter = new DateFormat();
 	private static final String dateTemplate = "MMMM yyyy";
+	private DatabaseManager dm;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -79,6 +82,39 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 				R.id.calendar_day_gridcell, month, year);
 		adapter.notifyDataSetChanged();
 		calendarView.setAdapter(adapter);
+		
+		dm = new DatabaseManager(getApplicationContext());
+		SQLiteDatabase db = dm.getWritableDatabase();
+		db.delete("Tasks", null, null);
+		
+		// Create a new map of values, where column names are the keys
+		ContentValues values11 = new ContentValues();
+		values11.put("taskid", 0);
+		values11.put("subject", "masa de pranz");
+		values11.put("description", "trebuie sa mananc putin si echilibrat");
+		values11.put("date", "20-January-2015");
+		values11.put("hour", "12:30");
+		values11.put("importance", "High");
+		
+		ContentValues values12 = new ContentValues();
+		values12.put("taskid", 1);
+		values12.put("subject", "tema de casa");
+		values12.put("description", "trebuie sa trimit tema de casa la facultate");
+		values12.put("date", "20-January-2015");
+		values12.put("hour", "23:55");
+		values12.put("importance", "Medium");
+		
+		ContentValues values13 = new ContentValues();
+		values13.put("taskid", 2);
+		values13.put("subject", "mersul la sala");
+		values13.put("description", "trebuie sa trag tare de fiare");
+		values13.put("date", "20-January-2015");
+		values13.put("hour", "15:30");
+		values13.put("importance", "Low");
+		
+		db.insert("Tasks", null, values11);
+		db.insert("Tasks", null, values12);
+		db.insert("Tasks", null, values13);
 	}
 
 	/**
