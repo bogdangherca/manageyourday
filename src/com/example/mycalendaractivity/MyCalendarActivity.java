@@ -30,6 +30,8 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.CheckBox;
 import android.widget.GridView;
@@ -99,40 +101,7 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 				R.id.calendar_day_gridcell, month, year);
 		adapter.notifyDataSetChanged();
 		calendarView.setAdapter(adapter);
-		dm = DatabaseCreator.getHelper(getApplicationContext());;
-		/*
-		SQLiteDatabase db = dm.getWritableDatabase();
-		db.delete("Tasks", null, null);
-		
-		// Create a new map of values, where column names are the keys
-		ContentValues values11 = new ContentValues();
-		values11.put("taskid", 0);
-		values11.put("subject", "masa de pranz");
-		values11.put("description", "trebuie sa mananc putin si echilibrat");
-		values11.put("date", "20-January-2015");
-		values11.put("hour", "12:30");
-		values11.put("importance", "High");
-		
-		ContentValues values12 = new ContentValues();
-		values12.put("taskid", 1);
-		values12.put("subject", "tema de casa");
-		values12.put("description", "trebuie sa trimit tema de casa la facultate");
-		values12.put("date", "20-January-2015");
-		values12.put("hour", "23:55");
-		values12.put("importance", "Medium");
-		
-		ContentValues values13 = new ContentValues();
-		values13.put("taskid", 2);
-		values13.put("subject", "mersul la sala");
-		values13.put("description", "trebuie sa trag tare de fiare");
-		values13.put("date", "20-January-2015");
-		values13.put("hour", "15:30");
-		values13.put("importance", "Low");
-		
-		db.insert("Tasks", null, values11);
-		db.insert("Tasks", null, values12);
-		db.insert("Tasks", null, values13);
-		*/
+		dm = DatabaseCreator.getHelper(getApplicationContext());
 	}
 
 	/**
@@ -253,6 +222,20 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 		@Override
 		public int getCount() {
 			return list.size();
+		}
+		
+		private int getMonthAsInt (String month)
+		{
+			int n = -1;
+			
+			for (int i = 0 ; i < months.length ; i++) {
+				if (months[i].equals(month)) {
+					n = i;
+					break;
+				}
+			}
+			
+			return n;
 		}
 
 		/**
@@ -438,6 +421,99 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 
 		private TableLayout tl;
 		private String date_month_year;
+		private int directionHourSort = 1;
+		private int directionPrioritySort = 0;
+		
+		private void bubbleSortPriority (TableRow[] vectTR) {
+			int j = 0, n = vectTR.length;
+			TableRow tmp;
+			boolean swapped = true;
+			
+			while (swapped) {
+				swapped = false;
+				j++;
+				for (int i = 0 ; i < n - j ; i++) {
+					TextView pr1 = (TextView) vectTR[i].getChildAt(3);
+					String prC1 = pr1.getText().toString();
+					
+					TextView pr2 = (TextView) vectTR[i + 1].getChildAt(3);
+					String prC2 = pr2.getText().toString();
+					
+					if ((directionPrioritySort == 0 && (((prC1.equals("High") || prC1.equals("Medium")) && prC2.equals("Low")) ||
+							(prC1.equals("High") && prC2.equals("Medium")))) ||
+							(directionPrioritySort == 1 && (((prC2.equals("High") || prC2.equals("Medium")) && prC1.equals("Low")) ||
+							(prC2.equals("High") && prC1.equals("Medium"))))) {
+						tmp = vectTR[i];
+						vectTR[i] = vectTR[i + 1];
+						vectTR[i + 1] = tmp;
+						swapped = true;
+					}
+				}
+			}
+		}
+		
+		private void bubbleSortHour (TableRow[] vectTR) {
+			int j = 0, n = vectTR.length;
+			TableRow tmp;
+			boolean swapped = true;
+			
+			while (swapped) {
+				swapped = false;
+				j++;
+				for (int i = 0 ; i < n - j ; i++) {
+					TextView hr1 = (TextView) vectTR[i].getChildAt(2);
+					String hrS1 = hr1.getText().toString();
+					String[] hrSplit1 = hrS1.split(":");
+					Date dt1 = new Date(0, 0, 0, Integer.valueOf(hrSplit1[0]), Integer.valueOf(hrSplit1[1]));
+					
+					TextView hr2 = (TextView) vectTR[i + 1].getChildAt(2);
+					String hrS2 = hr2.getText().toString();
+					String[] hrSplit2 = hrS2.split(":");
+					Date dt2 = new Date(0, 0, 0, Integer.valueOf(hrSplit2[0]), Integer.valueOf(hrSplit2[1]));
+					
+					if (((directionHourSort == 0) && (dt1.compareTo(dt2) > 0)) ||
+							((directionHourSort == 1) && (dt1.compareTo(dt2) < 0))) {
+						tmp = vectTR[i];
+						vectTR[i] = vectTR[i + 1];
+						vectTR[i + 1] = tmp;
+						swapped = true;
+					}
+				}
+			}
+		}
+		
+		private OnClickListener sortOnClickListener = new OnClickListener() {
+	        public void onClick(View v) {
+	        	TextView tv = (TextView)v;
+	        	String comparator = tv.getText().toString();
+
+	        	int nr = tl.getChildCount();
+        		TableRow[] vectTR = new TableRow[nr - 1];
+        		for (int k = 1 ; k < nr ; k++) {
+        			vectTR[k - 1] = (TableRow)tl.getChildAt(k);
+        		}
+	        	
+	        	if (comparator.equals("End time"))
+	        	{
+	        		bubbleSortHour(vectTR);
+	        		if (directionHourSort == 0)
+	        			directionHourSort = 1;
+	        		else
+	        			directionHourSort = 0;
+	        	} else if (comparator.equals("Priority")) {
+	        		bubbleSortPriority(vectTR);
+	        		if (directionPrioritySort == 0)
+	        			directionPrioritySort = 1;
+	        		else
+	        			directionPrioritySort = 0;
+	        	}
+	        	
+	        	tl.removeViews(1, vectTR.length);
+	        	for (int k = 0 ; k < vectTR.length ; k++) {
+	        		tl.addView(vectTR[k]);
+	        	}
+	        }
+		};
 		
 		private OnClickListener rowOnClickListener = new OnClickListener() {
 	        public void onClick(View v) {
@@ -449,7 +525,12 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 	        	CheckBox cb = (CheckBox) tr.getChildAt(4);
 	        	if (cb.isChecked()) {
 	        		tl.removeView(tr);
-	        		tl.refreshDrawableState();
+	        		if (tl.getChildCount() > 1) {
+	        			tl.refreshDrawableState();
+	        		} else {
+	        			tl.removeAllViews();
+	        			Toast.makeText(getApplicationContext(), "There are no tasks for today!", Toast.LENGTH_LONG).show();
+	        		}
 	        		
 	        		SQLiteDatabase db = dm.getReadableDatabase();
 	        		String selection = "date='" +  date_month_year + "' AND hour='" + hour + "'";
@@ -467,6 +548,32 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 	        }
 	    };  
 		
+	    private OnCheckedChangeListener checkboxOnListener = new OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				SQLiteDatabase db = dm.getReadableDatabase();
+				ContentValues values = new ContentValues();
+				
+				if (isChecked == true) {
+					values.put("checkTask", 1);
+				} else {
+					values.put("checkTask", 0);
+				}
+				
+				TableRow tr = (TableRow)buttonView.getParent();
+				TextView th = (TextView)tr.getChildAt(2);
+		        String hour = th.getText().toString();
+		        	
+				String selection = "date='" +  date_month_year + "' AND hour='" + hour + "'";
+					
+				int count = db.update(
+						"Tasks",
+					    values,
+					    selection,
+					    null);
+			}
+	    };
+	    
 		@Override
 		public void onClick(View view) {
 			date_month_year = (String) view.getTag();
@@ -474,7 +581,7 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 			
 			SQLiteDatabase db = dm.getReadableDatabase();
 			
-			String[] projection = {"taskid", "subject", "hour", "importance"};
+			String[] projection = {"checkTask", "subject", "hour", "importance"};
 			String selection = "date = '" + date_month_year + "'";
 			
 			String sortOrder = "hour" + " ASC";
@@ -498,34 +605,38 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 				}
 				
 				TextView iID = new TextView(getApplicationContext());
-				iID.setText("Task ID");
+				iID.setText("Task done");
 				iID.setTextColor(Color.rgb(204, 102, 0));
 				iID.setGravity(Gravity.CENTER);
-				iID.setPadding(10, 0, 10, 0);
+				iID.setPadding(5, 0, 5, 0);
 				
 				TextView sbID = new TextView(getApplicationContext());
 				sbID.setText("Task subject");
 				sbID.setTextColor(Color.rgb(204, 102, 0));
 				sbID.setGravity(Gravity.CENTER);
-				sbID.setPadding(10, 0, 10, 0);
+				sbID.setPadding(5, 0, 5, 0);
 				
 				TextView hID = new TextView(getApplicationContext());
 				hID.setText("End time");
 				hID.setTextColor(Color.rgb(204, 102, 0));
 				hID.setGravity(Gravity.CENTER);
-				hID.setPadding(10, 0, 10, 0);
+				hID.setPadding(5, 0, 5, 0);
+				hID.setClickable(true);
+				hID.setOnClickListener(sortOnClickListener);
 				
 				TextView imID = new TextView(getApplicationContext());
 				imID.setText("Priority");
 				imID.setTextColor(Color.rgb(204, 102, 0));
 				imID.setGravity(Gravity.CENTER);
-				imID.setPadding(10, 0, 10, 0);
+				imID.setPadding(5, 0, 5, 0);
+				imID.setClickable(true);
+				imID.setOnClickListener(sortOnClickListener);
 				
 				TextView cbID = new TextView(getApplicationContext());
 				cbID.setText("Delete task");
 				cbID.setTextColor(Color.rgb(204, 102, 0));
 				cbID.setGravity(Gravity.CENTER);
-				cbID.setPadding(10, 0, 10, 0);
+				cbID.setPadding(5, 0, 5, 0);
 				
 				TableRow rowH = new TableRow(getApplicationContext());
 				rowH.addView(iID);
@@ -539,50 +650,74 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 				int lines = c.getCount();
 				c.moveToFirst();
 				for (int j = 0 ; j < lines ; j++) {
-					int tid = c.getInt(c.getColumnIndexOrThrow("taskid"));
+					int checked = c.getInt(c.getColumnIndexOrThrow("checkTask"));
 					String sb = c.getString(c.getColumnIndexOrThrow("subject"));
 					String h = c.getString(c.getColumnIndexOrThrow("hour"));
 					String im = c.getString(c.getColumnIndexOrThrow("importance"));
-					
+									
 					int col = 0;
-					if (im.equals("High"))
+					
+					String[] dateSplit = date_month_year.split("-");
+					String[] hourSplit = h.split(":");
+					Date dt1 = new Date(new Integer(dateSplit[2]).intValue(), 
+									getMonthAsInt(dateSplit[1]),
+									new Integer(dateSplit[0]).intValue(), 
+									new Integer(hourSplit[0]).intValue(), 
+									new Integer(hourSplit[1]).intValue());
+					
+					Calendar calendarInfo = Calendar.getInstance();
+					int day = calendarInfo.get(Calendar.DAY_OF_MONTH);
+					int month = calendarInfo.get(Calendar.MONTH);
+					int year = calendarInfo.get(Calendar.YEAR);
+					int hourCal = calendarInfo.get(Calendar.HOUR_OF_DAY);
+					int minutes = calendarInfo.get(Calendar.MINUTE);
+					
+					Date dt2 = new Date(year, month, day, hourCal, minutes);
+					
+					if (dt1.compareTo(dt2) < 0)
+						col = R.color.note_text_disabled;
+					else if (im.equals("High"))
 						col = Color.RED;
 					else if (im.equals("Medium"))
 						col = Color.BLACK;
 					else
 						col = Color.BLUE;
 						
-					
-					TextView idV = new TextView(getApplicationContext());
-					idV.setText(tid + "");
-					idV.setTextColor(col);
-					idV.setGravity(Gravity.CENTER);
-					idV.setPadding(10, 0, 10, 0);
+					CheckBox taskCheck = new CheckBox(getApplicationContext());
+					if (checked == 0)
+						taskCheck.setChecked(false);
+					else
+						taskCheck.setChecked(true);
+					taskCheck.setGravity(Gravity.CENTER);
+					taskCheck.setPadding(5, 0, 5, 0);
+					taskCheck.setOnCheckedChangeListener(checkboxOnListener);
 					
 					TextView sbV = new TextView(getApplicationContext());
 					sbV.setText(sb);
 					sbV.setTextColor(col);
 					sbV.setGravity(Gravity.CENTER);
-					sbV.setPadding(10, 0, 10, 0);
+					sbV.setPadding(5, 0, 5, 0);
 					
 					TextView hV = new TextView(getApplicationContext());
 					hV.setText(h);
 					hV.setTextColor(col);
 					hV.setGravity(Gravity.CENTER);
-					hV.setPadding(10, 0, 10, 0);
+					hV.setPadding(5, 0, 5, 0);
 					
 					TextView imV = new TextView(getApplicationContext());
 					imV.setText(im);
 					imV.setTextColor(col);
 					imV.setGravity(Gravity.CENTER);
-					imV.setPadding(10, 0, 10, 0);
+					imV.setPadding(5, 0, 5, 0);
 					
 					CheckBox cb = new CheckBox(getApplicationContext());
 					cb.setChecked(false);
+					cb.setGravity(Gravity.CENTER);
+					cb.setPadding(5, 0, 5, 0);
 					
 					TableRow row = new TableRow(getApplicationContext());
 
-					row.addView(idV);
+					row.addView(taskCheck);
 			        row.addView(sbV);
 			        row.addView(hV);
 			        row.addView(imV);

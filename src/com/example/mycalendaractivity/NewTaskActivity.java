@@ -148,6 +148,7 @@ public class NewTaskActivity extends Activity {
 		dm = DatabaseCreator.getHelper(getApplicationContext());
 		SQLiteDatabase db = dm.getWritableDatabase();
 		ContentValues values = new ContentValues();
+		values.put("checkTask", 0);
 		values.put("subject", ((EditText)findViewById(R.id.taskSubjectId)).getText().toString());
 		values.put("description", ((EditText)findViewById(R.id.taskDescriptionId)).getText().toString());	
 		values.put("date", date);

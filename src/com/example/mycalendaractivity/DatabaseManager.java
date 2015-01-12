@@ -6,11 +6,11 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseManager extends SQLiteOpenHelper {
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "ManagerDay.db";
+    public static final int DATABASE_VERSION = 2;
+    public static final String DATABASE_NAME = "ManagerDay2.db";
     private static final String SQL_CREATE_ENTRIES =
     	    "CREATE TABLE " + "Tasks" + " (" +
-    	    "taskid" + " int," +
+    	    "checkTask" + " int," +
     	    "subject" + " varchar(255)," +
     	    "description" + " varchar(255)," +
     	    "date" + " varchar(255)," +
