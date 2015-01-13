@@ -58,7 +58,7 @@ public class NewTaskActivity extends Activity {
 				titleWidget.setText(extras.getString(MyCalendarActivity.TITLE));
 			if (extras.containsKey(MyCalendarActivity.DESCRIPTION))
 				descriptionWidget.setText(extras.getString(MyCalendarActivity.DESCRIPTION));
-			if (extras.containsKey(extras.getString(MyCalendarActivity.IMP)))
+			if (extras.containsKey(MyCalendarActivity.IMP))
 			{
 				String imp = extras.getString(MyCalendarActivity.IMP);
 				if (imp.equals("High"))

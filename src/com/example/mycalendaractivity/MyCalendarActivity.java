@@ -48,8 +48,8 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 	static final String YEAR = "com.MyCalendar.YEAR";
 	static final String MONTH = "com.MyCalendar.MONTH";
 	static final String DAY = "com.MyCalendar.DAY";
-	static final String TITLE = "com.MyCalendar.DAY";
-	static final String DESCRIPTION = "com.MyCalendar.DAY";
+	static final String TITLE = "com.MyCalendar.TITLE";
+	static final String DESCRIPTION = "com.MyCalendar.DESCRIPTION";
 	static final String HOUR = "com.MyCalendar.HOUR";
 	static final String MIN = "com.MyCalendar.MIN";
 	static final String IMP = "com.MyCalendar.IMP";
@@ -537,12 +537,31 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 	        		db.delete("Tasks", selection, null);
 	        	}
 	        	else {
-
+	        		SQLiteDatabase db = dm.getReadableDatabase();
+	        		String selection = "date='" +  date_month_year + "' AND hour='" + hour + "'";	
 	        		TextView subj = (TextView)tr.getChildAt(1);
 		        	String subiect = subj.getText().toString();
 		        	
 		        	TextView imp = (TextView)tr.getChildAt(3);
 		        	String priority = imp.getText().toString();
+		        	String[] projection = {"description"};
+					Cursor c = db.query("Tasks", 
+							projection,
+							selection,
+							null,
+							null,
+							null,
+							null);
+					StringTokenizer stk = new StringTokenizer(hour, " :;/\\");
+					c.moveToFirst();
+					String description = c.getString(c.getColumnIndexOrThrow("description"));
+					db.delete("Tasks", selection, null);
+					String[] dateSplit = date_month_year.split("-");
+		        	openUpdateTaskActivity(Integer.parseInt(dateSplit[2]), 
+		        			getMonthAsInt(dateSplit[1]), Integer.parseInt(dateSplit[0]), 
+		        			Integer.parseInt(stk.nextToken()),
+		        			Integer.parseInt(stk.nextToken()), subiect, 
+		        			description, imp.getText().toString());
 		        }
 	        	
 	        }
@@ -777,7 +796,7 @@ public class MyCalendarActivity extends Activity implements OnClickListener {
 	public void openUpdateTaskActivity(int year, int month, int day, int hour, int min, String title, String description, String imp) {
 		Intent intent = new Intent(this, NewTaskActivity.class);
 		intent.putExtra(YEAR, year);
-		intent.putExtra(MONTH, month);
+		intent.putExtra(MONTH, month + 1);
 		intent.putExtra(DAY, day);
 		intent.putExtra(HOUR, hour);
 		intent.putExtra(MIN, min);
