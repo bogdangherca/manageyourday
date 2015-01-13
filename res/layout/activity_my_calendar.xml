@@ -18,7 +18,7 @@
             android:id="@+id/settings"
             android:layout_width="54sp"
             android:layout_height="60sp"
-            android:background="@drawable/meenu"
+            android:background="@drawable/search1"
             android:onClick="triggerSearch" />
 
         <ImageView
